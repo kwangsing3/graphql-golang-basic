@@ -1,31 +1,62 @@
-# github.com/kwangsing3/graphql-golang-basic
-基於GraphQL的設計介面，與MongoDB互動的Golang Web service範例專案，主要用於快速部屬與教學示範
+# graphql-golang-basic
 
-IDE: visual code
+基於 **GraphQL + gqlgen** 設計介面、與 **MongoDB Atlas** 互動的 Golang Web Service 範例專案，主要用於快速部署與教學示範。
 
+## 實現的 GraphQL 介面
 
+| 類型 | 方法 | 說明 |
+|------|------|------|
+| Query | `getStock(code)` | 查詢股票資料及歷史紀錄 |
+| Mutation | `createStock(input)` | 新增股票基本資料 |
+| Mutation | `insertRecord(input)` | 新增每日交易紀錄 |
 
-# 範例實現的介面
+## 技術棧
 
-此範例專案實現幾個主要的 GraphQL 介面特性 :
+| 層級 | 套件 |
+|------|------|
+| 語言 | Go 1.19 |
+| GraphQL 框架 | [gqlgen v0.17](https://gqlgen.com/) |
+| 資料庫 | MongoDB（官方 Go Driver）|
+| GraphQL 介面 | gqlgen playground（內建）|
 
-- 查詢 method (getStock)
-- 新增 method (createStock)
-- 新增紀錄 method (InsertRecord)
+## 快速開始
 
-# Where to start with?
+### 1. 取得原始碼
 
 ```bash
-$ git clone https://github.com/kwangsing3/graphql-golang-basic
+git clone https://github.com/kwangsing3/graphql-golang-basic
+cd graphql-golang-basic
 ```
 
-# Develop guide
+### 2. 設定 MongoDB 連線
 
-編輯Graphql結構
-``` graphql
-# GraphQL schema example
-# ./graph/schema.graphqls
+編輯 `dbhandler/dbhandler.go`，將 MongoDB Atlas 連線字串替換為你的：
 
+```go
+var DB, _ = NewDBHandler("mongodb+srv://<username>:<password>@<cluster>.mongodb.net/test")
+```
+
+> MongoDB Atlas 免費叢集可至 [https://www.mongodb.com/atlas](https://www.mongodb.com/atlas) 建立。
+> 連線字串格式：`mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/dbname`
+
+### 3. 安裝依賴並啟動
+
+```bash
+go mod tidy
+go run server.go
+```
+
+伺服器預設監聽 Port **80**，開啟瀏覽器至：
+
+```
+http://localhost/
+```
+
+即可使用 GraphQL Playground。
+
+## GraphQL Schema
+
+```graphql
 type Query {
   stock(code: String!): Stock
 }
@@ -40,86 +71,48 @@ type Stock {
   historicalRecord: [DailyRecord]!
 }
 type DailyRecord {
-  date: String! #日期
-  tradingVolume: Float! #成交股數
-  tradingPrice: Float! #成交金額
-  openPrice: Float! #開盤價
-  closePrice: Float! #收盤價
+  date: String!
+  tradingVolume: Float!
+  tradingPrice: Float!
+  openPrice: Float!
+  closePrice: Float!
 }
+```
 
-input NewStock {
-  code: String!
-  name: String!
+## 使用範例
+
+**新增股票**
+```graphql
+mutation {
+  createStock(input: { code: "2330", name: "台積電" }) {
+    code
+    name
+  }
 }
+```
 
-input NewRecord {
-  code: String! #證券代號
-  name: String! #證券名稱
-  date: String! #日期
-  tradingVolume: Float! #成交股數
-  tradingPrice: Float! #成交金額
-  openPrice: Float! #開盤價
-  closePrice: Float! #收盤價
+**查詢股票**
+```graphql
+query {
+  stock(code: "2330") {
+    name
+    historicalRecord {
+      date
+      closePrice
+    }
+  }
 }
-
 ```
 
-運行腳本來產生以Graphql結構代碼為主體的程式碼
-```bash
-$ go run github.com/99designs/gqlgen init
-```
+## 擴充 Schema
 
-最後實作 Reslover
-```go
-// ./graph/schema.resolvers.go
-func (r *queryResolver) Stock(ctx context.Context, code string) (*model.Stock, error) {
-	res, err := dbhandler.DB.GetStockByCode(code)
-	return res, err
-}
+1. 修改 `./graph/schema.graphqls`
+2. 重新執行 gqlgen codegen：
+   ```bash
+   go run github.com/99designs/gqlgen generate
+   ```
+3. 實作 `./graph/schema.resolvers.go` 中的新方法
 
-.......
-```
-# Screenshot
+## 授權
 
-```url
-http://localhost:4000/
-```
-
-- Query 查詢範例
-  ![alt text](doc/2023-02-02%2023.12.14.png)
-
-- Mutation 範例
-  ![alt text](doc/2023-02-02%2023.13.22.png)
-
-# 作者聲明 Statement
-
-此專案是一個基於 Golang、MongoDB、GraphQL 的範例專案，
-
-```
-Copyright (C) <year> <copyright holders>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this
-software and associated documentation files (the "Software"), to deal in the
-Software without restriction, including without limitation the rights to use, copy,
-modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-and to permit persons to whom the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-```
-
-此專案的建立目的主要用於
-
-- 教學、範例
-- 快速建置可立即部屬使用的 GraphQL Server
-
-任何獲取此專案源碼的衍伸項目皆可以使用於任何包含但不限於 "商業" 、 "個人" 、 "教學使用"，如此專案的衍伸項目涉及觸犯相關國家的法律或規範，作者及相關貢獻者皆無須承擔相關的法律責任。
+MIT — 可自由用於商業、個人、教學用途。
