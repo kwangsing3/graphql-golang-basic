@@ -2,6 +2,14 @@
 
 基於 **GraphQL + gqlgen** 設計介面、與 **MongoDB Atlas** 互動的 Golang Web Service 範例專案，主要用於快速部署與教學示範。
 
+## 畫面預覽
+
+啟動後在內建的 gqlgen Playground 即可直接送出查詢與變更：
+
+| Query — 查詢股票 | Mutation — 新增股票 |
+|:---:|:---:|
+| ![Query 查詢股票](doc/2023-02-02%2023.12.14.png) | ![Mutation 新增股票](doc/2023-02-02%2023.13.22.png) |
+
 ## 實現的 GraphQL 介面
 
 | 類型 | 方法 | 說明 |
